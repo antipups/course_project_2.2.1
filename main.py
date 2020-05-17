@@ -143,13 +143,13 @@ class MyApp(App):
         :param times:
         :return:
         """
-        if width < 600:
-            width += 50 / 6
-            height += 69 / 6
+        if width < 1200:
+            width += 100 / 6
+            height += 50 / 6
             Window.top = Window.top - 42.85 / 10
-            Window.left = Window.left - 47.85 / 12
+            Window.left = Window.left - 94 / 12
             Window.size = (width, height)
-            Clock.schedule_once(partial(self.anim_main_menu, width, height), 0.0005)
+            Clock.schedule_once(partial(self.anim_main_menu, width, height), 0.00005)
         else:
             Window.size = (width, 600)
             self.main_menu()

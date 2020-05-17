@@ -46,9 +46,9 @@ def read_tables(name_of_table_rus):
         'Соц. положение': ('social', {'ID': [], 'Название соц. положения': []}),
         'Льгота': ('privilege', {'ID': [], 'Условие по оплате': [], 'Тариф льготы': [], 'Тип льготы': []}),
         'Тариф': ('tariff', {'ID': [], 'Тип тарифа': [], 'Дата начала': [], 'Дата конца': [], 'Коэфициент': []}),
-        'Абонент': ('abonent', {'ID': [], 'Фамилия': [], 'Имя': [], 'Отчество': [], 'Телефон': [], 'Адрес': [], 'Документ на льготу': [], 'Социальное положение': []}),
-        'АТС': ('ats', {'ID': [], 'Название': [], 'Район': [], 'Адрес': [], 'Год открытия': [], 'Государственная (бул)': [], 'Лицензиая на оказ услуг': []}),
-        'Звонок': ('call', {'ID': [], 'Цена': [], 'Номер телефона': [], 'Дата звонка': [], 'Длительность': [], 'Тариф': [], 'Абонент': [], 'АТС': [], 'Льгота': [], 'Город': []}),
+        'Абонент': ('abonent', {'ID': [], 'Фамилия': [], 'Имя': [], 'Отчество': [], 'Телефон': [], 'Адрес': [], 'Документ': [], 'Соц. положение': []}),
+        'АТС': ('ats', {'ID': [], 'Название': [], 'Район': [], 'Адрес': [], 'Год открытия': [], 'Государственная': [], 'Лицензия': []}),
+        'Звонок': ('call', {'ID': [], 'Город': [], 'Цена': [], 'Номер телефона': [], 'Дата звонка': [], 'Длительность': [], 'Тариф': [], 'Абонент': [], 'АТС': [], 'Льгота': [], 'Город': []}),
     }.get(name_of_table_rus)
 
     name_of_table, dict_of_data = data_of_table
@@ -77,12 +77,42 @@ def read_tables(name_of_table_rus):
             for index, key in enumerate(dict_of_data.keys()):
                 dict_of_data[key].append(row[index])
 
-    elif name_of_table_rus == '':
+    elif name_of_table_rus == 'АТС':
         cursor.execute(f'SELECT * '
                        f'FROM {name_of_table} '
-                       f'INNER JOIN type_privilege ON type_privilege.id = {name_of_table}.id_of_type')
+                       f'INNER JOIN district ON district.id = {name_of_table}.id_of_district')
         for row in cursor.fetchall():
-            row = row[:3] + row[5:]
+            row = list(row)
+            row[-4] = 'Да' if row[-4] == 1 else 'Нет'
+            del row[2]
+            row.insert(2, row.pop(-1))
+            for index, key in enumerate(dict_of_data.keys()):
+                dict_of_data[key].append(row[index])
+
+    elif name_of_table_rus == 'Абонент':
+        cursor.execute(f'SELECT * '
+                       f'FROM {name_of_table} '
+                       f'INNER JOIN social ON social.id = {name_of_table}.id_of_social')
+        for row in cursor.fetchall():
+            row = list(row)
+            del row[6], row[-2]
+            row.insert(7, row.pop(-1))
+            for index, key in enumerate(dict_of_data.keys()):
+                dict_of_data[key].append(row[index])
+
+    elif name_of_table_rus == 'Звонок':
+        cursor.execute(f'SELECT * '
+                       f'FROM {name_of_table} '
+                       f'INNER JOIN city ON city.id = {name_of_table}.id_of_city '
+                       f'INNER JOIN tariff ON tariff.id = {name_of_table}.id_of_tariff '
+                       f'INNER JOIN abonent ON abonent.id = {name_of_table}.id_of_abonent '
+                       f'INNER JOIN ats ON ats.id = {name_of_table}.id_of_ats '
+                       f'INNER JOIN privilege ON privilege.id = {name_of_table}.id_of_privileges '
+                       )
+        for row in cursor.fetchall():
+            row = list(row)
+            row[1], row[6], row[7], row[8], row[9] = row[11], row[14], row[20] + ' ' + row[19][0] + '. ' + row[21][0] + '.', row[27], row[34],
+            del row[10:]
             for index, key in enumerate(dict_of_data.keys()):
                 dict_of_data[key].append(row[index])
 
