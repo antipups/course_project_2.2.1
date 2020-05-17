@@ -218,6 +218,5 @@ class MyApp(App):
         # вывод всего меню, и создание экранов
 
 
-
 if __name__ == '__main__':
     MyApp().run()
