@@ -220,21 +220,40 @@ class MyApp(App):
         Window.add_widget(sm)
 
     def modification_table(self):
+        """
+            Экран модификации данных в таблицах
+        :return:
+        """
         mode_screen = Screen(name='mode')
         bl = BoxLayout(orientation='vertical')
         mode_screen.add_widget(bl)
+
+        # создание экрана и добавление в него главного лайаута
+
         spiner = Spinner(text='Выберите таблицу для редактирования',
                          values=util.name_of_table_on_rus,
                          height=50,
                          size_hint_y=None)
         bl.add_widget(spiner)
 
+        # создание лайаута на вывод режимов
         bl_modes = BoxLayout(orientation='horizontal',
                              size_hint_y=None,
                              height=50)
 
-        bl_fields = BoxLayout(orientation='horizontal')
+        # создание лайаута для полей ввода
+        bl_fields = BoxLayout(orientation='horizontal',
+                              size_hint_y=None,
+                              height=50)
+
+        # создание лайаута для вывода лейблов (что вводить?)
+        bl_title_of_rows = BoxLayout(orientation='horizontal',
+                                     size_hint_y=None,
+                                     height=50)
+
+        bl.add_widget(bl_title_of_rows)
         bl.add_widget(bl_fields)
+        bl.add_widget(Widget())
         bl.add_widget(bl_modes)
 
         dict_of_modes = {'Добавить': util.add,
@@ -252,17 +271,22 @@ class MyApp(App):
 
         def show_selected_value(spinner, text):
             dict_of_data.clear()
+            bl_title_of_rows.clear_widgets()
             bl_fields.clear_widgets()
             dict_of_data.update({text: []})
 
             for type_ in util.fields.get(text):
                 key, value = tuple(type_.items())[0]
+
+                bl_title_of_rows.add_widget(Button(text=value[1],
+                                                   background_color=(1, 0, 0, 1)))
+                value = value[0]
+
                 if isinstance(key, str):
                     bl_fields.add_widget(TextInput(hint_text=value,
                                                    size_hint_y=None,
                                                    height=50))
                 elif isinstance(key, int):
-                    print(value)
                     bl_fields.add_widget(Spinner(text='выбрать',
                                                  values=tuple(x[0] for x in value),
                                                  size_hint_y=None,
