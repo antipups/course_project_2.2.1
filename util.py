@@ -5,6 +5,45 @@ connect = sqlite3.connect('db.db')
 cursor = connect.cursor()
 
 
+name_of_table_on_rus = ('Типы привилегий', 'Город', 'Страна', 'Соц. положение', 'Районы',
+                        'Льгота', 'Тариф', 'Абонент', 'АТС', 'Звонок')
+fields = {'Страна': ({str(): 'Россия'},),
+          'Районы': ({str(): 'Кировский'},),
+          'Тариф': ({str(): 'День'},
+                    {str(): '11'},
+                    {str(): '18'},
+                    {str(): '37'}),
+          'Типы привилегий': ({str(): 'Инвалид'},),
+          'Соц. положение': ({str(): 'Бизнесмен'},),
+          'Льгота': ({str(): 'Многодетная семья'},
+                     {str(): 'Название льготы'},
+                     {int(): tuple(cursor.execute('SELECT title_of_privilege FROM type_privilege').fetchall())}),
+          'Город': ({str(): 'Донецк'},
+                    {int(): tuple(cursor.execute('SELECT title_country FROM country').fetchall())}),
+          'Звонок': ({int(): tuple(cursor.execute('SELECT title_of_city FROM city').fetchall())},
+                     {str(): '2000'},
+                     {str(): '123456789'},
+                     {str(): '26.03.2005'},
+                     {str(): '25'},
+                     {int(): tuple(cursor.execute('SELECT type FROM tariff').fetchall())},
+                     {int(): tuple(cursor.execute('SELECT second_name || ". " || SUBSTR(first_name, 1) || ". ", SUBSTR(third_name, 1) || "." AS name FROM abonent').fetchall())},
+                     {int(): tuple(cursor.execute('SELECT title FROM ats').fetchall())},
+                     {int(): tuple(cursor.execute('SELECT tariff FROM privilege').fetchall())}),
+          'Абонент': ({str(): 'Владислав'},
+                      {str(): 'Лошкарь'},
+                      {str(): 'Михайлович'},
+                      {str(): '123456789'},
+                      {str(): 'Семашкино 23/4'},
+                      {int(): tuple(cursor.execute('SELECT title_of_social FROM social').fetchall())},
+                      {str(): 'Путь к картинке'}),
+          'АТС': ({str(): 'ООО Ацепт'},
+                  {int(): tuple(cursor.execute('SELECT title_of_district FROM district').fetchall())},
+                  {str(): 'Артема 45'},
+                  {str(): '2005'},
+                  {tuple(): ''},
+                  {str(): 'Лицензия'})}
+
+
 def has_user(login, password):
     """
         Авторизация
@@ -38,6 +77,11 @@ def reg_user(login, password):
 
 
 def read_tables(name_of_table_rus):
+    """
+        Вывод таблиц на окно
+    :param name_of_table_rus:
+    :return:
+    """
     data_of_table = {
         'Районы': ('district', {'ID': [], 'Название страны': []}),
         'Типы привилегий': ('type_privilege', {'ID': [], 'Название типа льготы': []}),
@@ -48,7 +92,7 @@ def read_tables(name_of_table_rus):
         'Тариф': ('tariff', {'ID': [], 'Тип тарифа': [], 'Дата начала': [], 'Дата конца': [], 'Коэфициент': []}),
         'Абонент': ('abonent', {'ID': [], 'Фамилия': [], 'Имя': [], 'Отчество': [], 'Телефон': [], 'Адрес': [], 'Документ': [], 'Соц. положение': []}),
         'АТС': ('ats', {'ID': [], 'Название': [], 'Район': [], 'Адрес': [], 'Год открытия': [], 'Государственная': [], 'Лицензия': []}),
-        'Звонок': ('call', {'ID': [], 'Город': [], 'Цена': [], 'Номер телефона': [], 'Дата звонка': [], 'Длительность': [], 'Тариф': [], 'Абонент': [], 'АТС': [], 'Льгота': [], 'Город': []}),
+        'Звонок': ('call', {'ID': [], 'Город': [], 'Цена': [], 'Номер телефона': [], 'Дата звонка': [], 'Длительность': [], 'Тариф': [], 'Абонент': [], 'АТС': [], 'Льгота': []}),
     }.get(name_of_table_rus)
 
     name_of_table, dict_of_data = data_of_table
@@ -117,4 +161,27 @@ def read_tables(name_of_table_rus):
                 dict_of_data[key].append(row[index])
 
     return dict_of_data
-    # print(cursor.fetchall())
+
+
+def add(name_of_table, **data):
+    print(name_of_table, data)
+    return None
+
+
+def update(name_of_table, **data):
+    print(name_of_table, data)
+    return None
+
+
+def delete(name_of_table, **data):
+    print(name_of_table, data)
+    return None
+
+
+def find(name_of_table, **data):
+    print(name_of_table, data)
+    return None
+
+
+if __name__ == '__main__':
+    print(cursor.execute('SELECT * FROM city').fetchall())

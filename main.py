@@ -1,6 +1,7 @@
 from kivy.animation import Animation
 import ctypes
 from kivy.config import Config
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.scrollview import ScrollView
 
 Config.set('graphics', 'width', 300)
@@ -162,8 +163,9 @@ class MyApp(App):
         """
         self.title = 'Главное меню'
         sm = ScreenManager()
-        main_screen = Screen()
+        main_screen = Screen(name='main')
         sm.add_widget(main_screen)
+        sm.add_widget(self.modification_table())
         sm.switch_to(main_screen)
 
         bl = BoxLayout(orientation='vertical')
@@ -173,11 +175,8 @@ class MyApp(App):
                               height=50)
 
         spinner = Spinner(
-            # default value shown
-            text='Таблицы',
-            # available values
-            values=('Типы привилегий', 'Город', 'Страна', 'Соц. положение', 'Районы',
-                    'Льгота', 'Тариф', 'Абонент', 'АТС', 'Звонок'),
+            text='Вывод таблицы',
+            values=util.name_of_table_on_rus,
         )
 
         table = GridLayout(row_default_height=50,
@@ -191,7 +190,6 @@ class MyApp(App):
 
             table.clear_widgets()
             dict_of_data = util.read_tables(text)
-            print(dict_of_data)
             table.cols = len(dict_of_data)
 
             for key in dict_of_data.keys():
@@ -207,6 +205,12 @@ class MyApp(App):
         # выбор чего-то
 
         bl_header.add_widget(spinner)
+
+        def switch_to_mode(instance):
+            sm.current = 'mode'
+
+        bl_header.add_widget(Button(text='Модификация таблиц',
+                                    on_press=switch_to_mode))
         bl_header.add_widget(Button(text='Запросы'))
         bl.add_widget(bl_header)
 
@@ -215,7 +219,65 @@ class MyApp(App):
         main_screen.add_widget(bl)
         Window.add_widget(sm)
 
-        # вывод всего меню, и создание экранов
+    def modification_table(self):
+        mode_screen = Screen(name='mode')
+        bl = BoxLayout(orientation='vertical')
+        mode_screen.add_widget(bl)
+        spiner = Spinner(text='Выберите таблицу для редактирования',
+                         values=util.name_of_table_on_rus,
+                         height=50,
+                         size_hint_y=None)
+        bl.add_widget(spiner)
+
+        bl_modes = BoxLayout(orientation='horizontal',
+                             size_hint_y=None,
+                             height=50)
+
+        bl_fields = BoxLayout(orientation='horizontal')
+        bl.add_widget(bl_fields)
+        bl.add_widget(bl_modes)
+
+        dict_of_modes = {'Добавить': util.add,
+                         'Изменить': util.update,
+                         'Удалить': util.delete,
+                         'Найти': util.find}
+
+        dict_of_data = {}
+
+        for key, value in dict_of_modes.items():
+            bl_modes.add_widget(Button(text=key,
+                                       background_color=(0, 1, 0, 1),
+                                       on_press=lambda instance: value(dict_of_data.keys()[0], ),
+                                       disabled=True))
+
+        def show_selected_value(spinner, text):
+            dict_of_data.clear()
+            bl_fields.clear_widgets()
+            dict_of_data.update({text: []})
+
+            for type_ in util.fields.get(text):
+                key, value = tuple(type_.items())[0]
+                if isinstance(key, str):
+                    bl_fields.add_widget(TextInput(hint_text=value,
+                                                   size_hint_y=None,
+                                                   height=50))
+                elif isinstance(key, int):
+                    print(value)
+                    bl_fields.add_widget(Spinner(text='выбрать',
+                                                 values=tuple(x[0] for x in value),
+                                                 size_hint_y=None,
+                                                 height=50))
+                elif isinstance(key, tuple):
+                    bl_fields.add_widget(CheckBox(active=True,
+                                                  size_hint_y=None,
+                                                  height=50))
+
+            for widget in bl_modes.children:
+                widget.disabled = False
+
+        spiner.bind(text=show_selected_value)
+        # bl.add_widget(Widget())
+        return mode_screen
 
 
 if __name__ == '__main__':
