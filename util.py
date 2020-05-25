@@ -180,12 +180,17 @@ def read_tables(name_of_table_rus):
 
 def add(name_of_table, dict_of_data):
     name_of_table = rus_on_engl.get(name_of_table)
-    print(name_of_table)
     validation = eval('checker.' + name_of_table + '(dict_of_data)')
-    print(validation)
     if not validation[0]:
         return validation
-    return (True,)
+    query = f'INSERT INTO {name_of_table} (' + ', '.join(dict_of_data.keys()) + ') VALUES ("' + '", "'.join(dict_of_data.values()) + '")'
+    try:
+        cursor.execute(query)
+    except sqlite3.IntegrityError:
+        return (False, 'Такая запись уже есть')
+    else:
+        connect.commit()
+        return (True, 'Добавлено успешно')
 
 
 def update(name_of_table, **data):

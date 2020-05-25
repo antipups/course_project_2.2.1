@@ -302,6 +302,7 @@ class MyApp(App):
 
                 def add(instance):
                     dict_of_data = {}
+                    instance.background_color, instance.text = (1, 1, 1, 1), 'Добавить'
                     for widget in reversed(gl.children[1:]):
                         if widget.text and widget.text.find('---') == -1:
                             widget.background_color = (1, 1, 1, 1)
@@ -310,12 +311,15 @@ class MyApp(App):
                             instance.background_color = widget.background_color = (1, 0, 0, 1)
                             return
                     result = util.add(text, dict_of_data)
-                    if not result[0]:
+                    if not result[0] and len(result) == 3:
                         for widget in reversed(gl.children[1:]):
                             if widget.id == result[1]:
                                 widget.text, widget.hint_text, widget.hint_text_color = '', result[2], (1, 0, 0, 1)
                             else:
                                 widget.hint_text_color = (1, 1, 1, 1)
+                    else:
+                        instance.background_color = (0, 1, 0, 1) if result[0] else (1, 0, 0, 1)
+                        instance.text = result[1]
 
 
                 gl.add_widget(Button(text='Добавить',
