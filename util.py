@@ -263,3 +263,13 @@ def get_fields_delete(table):
 if __name__ == '__main__':
     # print(cursor.execute('SELECT * FROM city').fetchall())
     get_fields_add('Абонент')
+
+
+def delete_on_row(name_of_table, dict_of_data):
+    name_of_table = rus_on_engl.get(name_of_table)
+    cursor.execute(f'SELECT id FROM {name_of_table} WHERE '+ ' AND '.join(key + ' = "' + value + '"' for key, value in dict_of_data.items()))
+    list_of_pop_rows = tuple(row[0] for row in cursor.fetchall())
+    query = f'DELETE FROM {name_of_table} WHERE ' + ' AND '.join(key + ' = "' + value + '"' for key, value in dict_of_data.items())
+    cursor.execute(query)
+    connect.commit()
+    return list_of_pop_rows

@@ -281,7 +281,6 @@ class MyApp(App):
             instance.background_color = (0, 1, 1, 1)
 
             if instance.text == 'Удалить' and len(list_of_rows) > 1:
-
                 temp = BoxLayout(orientation='vertical')
 
                 def yes(instance):
@@ -306,6 +305,56 @@ class MyApp(App):
                                        height=35,
                                        on_press=lambda x: popup.dismiss()))
                 popup = Popup(title='Подтверждение удаления',
+                              size_hint=(None, None),
+                              size=(400, 400),
+                              content=temp)
+                popup.open()
+            elif instance.text == 'Удалить' and len(list_of_rows) == 1:
+                temp = BoxLayout(orientation='vertical')
+                engl, rus = util.get_fields_add(list_of_rows[0])
+                for column in engl:
+                    widget = None
+                    if column.startswith('id_of_'):
+                        widget = Spinner(text='--- Выберите ---',
+                                         values=util.get_mini_table(column[6:]),)
+                    else:
+                        widget = TextInput(hint_text=rus[engl.index(column)])
+                    widget.id = column
+                    widget.size_hint_y = None
+                    widget.height = 35
+                    temp.add_widget(widget)
+                else:
+                    temp.add_widget(Widget())
+
+                    button_layout = BoxLayout(orientation='horizontal')
+                    button_layout.add_widget(Button(text='Отмена',
+                                                    on_press=lambda x: popup.dismiss(),
+                                                    size_hint_y=None,
+                                                    height=35))
+
+                    def delete(instance):
+                        dict_of_data = {}
+                        for widget in temp.children[2:]:
+                            if widget.text and widget.text.find('---') == -1:
+                                dict_of_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+                        else:
+                            if len(dict_of_data) > 0:
+                                widgets_on_remove = []
+                                pop_elements = util.delete_on_row(list_of_rows[0], dict_of_data)
+                                for widget in gl.children:
+                                    if int(widget.id) in pop_elements:
+                                        widgets_on_remove.append(widget)
+                                for widget in widgets_on_remove:
+                                    gl.remove_widget(widget)
+
+                    button_layout.add_widget(Button(text='Удалить',
+                                                    on_press=delete,
+                                                    size_hint_y=None,
+                                                    height=35))
+
+                    temp.add_widget(button_layout)
+
+                popup = Popup(title='Удаление через поля',
                               size_hint=(None, None),
                               size=(400, 400),
                               content=temp)
