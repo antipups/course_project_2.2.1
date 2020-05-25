@@ -1,5 +1,6 @@
 import sqlite3
 
+import checker
 
 connect = sqlite3.connect('db.db')
 cursor = connect.cursor()
@@ -7,6 +8,19 @@ cursor = connect.cursor()
 
 name_of_table_on_rus = ('Типы привилегий', 'Город', 'Страна', 'Соц. положение', 'Районы',
                         'Льгота', 'Тариф', 'Абонент', 'АТС', 'Звонок')
+
+
+rus_on_engl = {'Районы': 'district',
+               'Типы привилегий': 'type_privilege',
+               'Город': 'city',
+               'Страна': 'country',
+               'Соц. положение': 'social',
+               'Льгота': 'privilege',
+               'Тариф': 'tariff',
+               'Абонент': 'abonent',
+               'АТС': 'ats',
+               'Звонок': 'call'}
+
 
 fields = {'Страна': ({str(): ('Россия', 'Название страны')},),
           'Районы': ({str(): ('Кировский', 'Название района')},),
@@ -164,10 +178,14 @@ def read_tables(name_of_table_rus):
     return dict_of_data
 
 
-def add(name_of_table):
-    print(name_of_table[1].text)
-    print('sex')
-    return None
+def add(name_of_table, dict_of_data):
+    name_of_table = rus_on_engl.get(name_of_table)
+    print(name_of_table)
+    validation = eval('checker.' + name_of_table + '(dict_of_data)')
+    print(validation)
+    if not validation[0]:
+        return validation
+    return (True,)
 
 
 def update(name_of_table, **data):

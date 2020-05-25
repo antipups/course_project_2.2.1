@@ -298,6 +298,30 @@ class MyApp(App):
                 widget.size_hint_y = None
                 widget.height = 50
                 gl.add_widget(widget)
+            else:
+
+                def add(instance):
+                    dict_of_data = {}
+                    for widget in reversed(gl.children[1:]):
+                        if widget.text and widget.text.find('---') == -1:
+                            widget.background_color = (1, 1, 1, 1)
+                            dict_of_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+                        else:
+                            instance.background_color = widget.background_color = (1, 0, 0, 1)
+                            return
+                    result = util.add(text, dict_of_data)
+                    if not result[0]:
+                        for widget in reversed(gl.children[1:]):
+                            if widget.id == result[1]:
+                                widget.text, widget.hint_text, widget.hint_text_color = '', result[2], (1, 0, 0, 1)
+                            else:
+                                widget.hint_text_color = (1, 1, 1, 1)
+
+
+                gl.add_widget(Button(text='Добавить',
+                                     on_press=add,
+                                     size_hint_y=None,
+                                     height=50))
 
 
 
