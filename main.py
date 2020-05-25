@@ -1,3 +1,5 @@
+import functools
+
 from kivy.animation import Animation
 import ctypes
 from kivy.config import Config
@@ -232,6 +234,7 @@ class MyApp(App):
 
         spiner = Spinner(text='Выберите таблицу для редактирования',
                          values=util.name_of_table_on_rus,
+                         disabled=True,
                          height=50,
                          size_hint_y=None)
         bl.add_widget(spiner)
@@ -242,9 +245,7 @@ class MyApp(App):
                              height=50)
 
         # создание лайаута для полей ввода
-        bl_fields = BoxLayout(orientation='horizontal',
-                              size_hint_y=None,
-                              height=50)
+        gl = GridLayout()
 
         # создание лайаута для вывода лейблов (что вводить?)
         bl_title_of_rows = BoxLayout(orientation='horizontal',
@@ -252,52 +253,54 @@ class MyApp(App):
                                      height=50)
 
         bl.add_widget(bl_title_of_rows)
-        bl.add_widget(bl_fields)
+        bl.add_widget(gl)
         bl.add_widget(Widget())
         bl.add_widget(bl_modes)
 
-        dict_of_modes = {'Добавить': util.add,
-                         'Изменить': util.update,
-                         'Удалить': util.delete,
-                         'Найти': util.find}
+        dict_of_modes = ('Добавить', 'Изменить', 'Удалить', 'Найти')
 
         dict_of_data = {}
 
-        for key, value in dict_of_modes.items():
-            bl_modes.add_widget(Button(text=key,
+        def action(instance):
+            # dict_of_data = {}
+            # if instance.text == 'Добавить':
+            #     for widget in bl_fields.children:
+            #         if widget.text and widget.text != 'выбрать':
+            #             dict_of_data.update({})
+            #     # util.add(spiner.text)
+            spiner.disabled = False
+            instance.background_color = (0, 1, 1, 1)
+
+        for title_of_mode in dict_of_modes:
+            bl_modes.add_widget(Button(text=title_of_mode,
                                        background_color=(0, 1, 0, 1),
-                                       on_press=lambda instance: value(dict_of_data.keys()[0], ),
-                                       disabled=True))
+                                       on_press=action))
 
         def show_selected_value(spinner, text):
-            dict_of_data.clear()
             bl_title_of_rows.clear_widgets()
-            bl_fields.clear_widgets()
-            dict_of_data.update({text: []})
-
-            for type_ in util.fields.get(text):
-                key, value = tuple(type_.items())[0]
-
-                bl_title_of_rows.add_widget(Button(text=value[1],
-                                                   background_color=(1, 0, 0, 1)))
-                value = value[0]
-
-                if isinstance(key, str):
-                    bl_fields.add_widget(TextInput(hint_text=value,
+            gl.clear_widgets()
+            engl, rus = util.get_fields_add(text)
+            gl.cols = len(engl)
+            for title in rus:
+                bl_title_of_rows.add_widget(Button(text=title,
                                                    size_hint_y=None,
-                                                   height=50))
-                elif isinstance(key, int):
-                    bl_fields.add_widget(Spinner(text='выбрать',
-                                                 values=tuple(x[0] for x in value),
-                                                 size_hint_y=None,
-                                                 height=50))
-                elif isinstance(key, tuple):
-                    bl_fields.add_widget(CheckBox(active=True,
-                                                  size_hint_y=None,
-                                                  height=50))
+                                                   height=50,
+                                                   background_color=(0, 1, 0, 1),))
 
-            for widget in bl_modes.children:
-                widget.disabled = False
+            for column in engl:
+                widget = None
+                if column.startswith('id_of_'):
+                    widget = Spinner(text='--- Выберите ---',
+                                     values=util.get_mini_table(column[6:]),)
+                else:
+                    widget = TextInput()
+                widget.id = column
+                widget.size_hint_y = None
+                widget.height = 50
+                gl.add_widget(widget)
+
+
+
 
         spiner.bind(text=show_selected_value)
         # bl.add_widget(Widget())

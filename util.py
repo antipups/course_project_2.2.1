@@ -164,25 +164,69 @@ def read_tables(name_of_table_rus):
     return dict_of_data
 
 
-def add(name_of_table, **data):
-    print(name_of_table, data)
+def add(name_of_table):
+    print(name_of_table[1].text)
+    print('sex')
     return None
 
 
 def update(name_of_table, **data):
     print(name_of_table, data)
+    print('sex2')
     return None
 
 
 def delete(name_of_table, **data):
     print(name_of_table, data)
+    print('sex3')
     return None
 
 
 def find(name_of_table, **data):
     print(name_of_table, data)
+    print('sex4')
     return None
 
 
+def get_fields_add(name_of_table):
+    name_of_table = {'Районы': 'district',
+                     'Типы привилегий': 'type_privilege',
+                     'Город': 'city',
+                     'Страна': 'country',
+                     'Соц. положение': 'social',
+                     'Льгота': 'privilege',
+                     'Тариф': 'tariff',
+                     'Абонент': 'abonent',
+                     'АТС': 'ats',
+                     'Звонок': 'call'}.get(name_of_table)
+    cursor.execute(f'SELECT * FROM {name_of_table}')
+    name_of_row_on_engl = (column[0] for column in cursor.description if column[0] != 'id')
+    dict_of_rus_row = {'first_name': 'Имя', 'second_name': 'Фамилия', 'third_name': 'Отчество', 'phone': 'Телефон',
+                       'id_of_social': 'Соц. статус', 'document': 'Документ',
+
+                       'title': 'Название', 'id_of_district': 'Район', 'address': 'Адрес', 'year': 'Год основания',
+                       'govern': 'Государственная', 'license': 'Лицензия', 'id_of_city': 'Город', 'price': 'Цена',
+
+                       'phone_of_opponent': 'Номер оппонента', 'date_of_call': 'Дата звонка', 'duration': 'Длительность', 'id_of_tariff': 'Тариф',
+                       'id_of_abonent': 'Абонент', 'id_of_ats': 'АТС', 'id_of_privileges': 'Льгота', 'title_of_city': 'Город', 'id_of_country': 'Страна',
+
+                       'title_country': 'Страна', 'title_of_district': 'Район', 'condition': 'Условие', 'tariff': 'Тариф', 'id_of_type': 'Тип',
+                       'title_of_social': 'Соц. статус', 'type': 'Тип', 'start': 'Начало', 'end': 'Конец', 'coef': 'Коэфициент', 'title_of_privilege': 'Название льготы',
+                       'goverm': 'Государственная'
+                       }
+
+    name_of_row_on_rus = (dict_of_rus_row.get(column[0]) for column in cursor.description if column[0] != 'id')
+    return tuple(name_of_row_on_engl), tuple(name_of_row_on_rus)
+
+
+def get_mini_table(table):
+    if table == 'type':
+        table = 'type_privilege'
+    elif table == 'privileges':
+        table = 'privilege'
+    return (str(row[0]) + ' | ' + row[1] for row in cursor.execute(f'SELECT * FROM {table}').fetchall())
+
+
 if __name__ == '__main__':
-    print(cursor.execute('SELECT * FROM city').fetchall())
+    # print(cursor.execute('SELECT * FROM city').fetchall())
+    get_fields_add('Абонент')
