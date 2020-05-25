@@ -4,6 +4,7 @@ from kivy.animation import Animation
 import ctypes
 from kivy.config import Config
 from kivy.uix.checkbox import CheckBox
+from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 
 Config.set('graphics', 'width', 300)
@@ -157,6 +158,13 @@ class MyApp(App):
             Window.size = (width, 600)
             self.main_menu()
 
+    def switch(self, screen, direction):
+        """
+            Переключалка экранов
+        """
+        self.sm.transition.direction = direction
+        self.sm.current = screen
+
     def main_menu(self):
         """
                 Функция в которой прорисоваваются все главные элементы управления,
@@ -164,11 +172,11 @@ class MyApp(App):
         :return:
         """
         self.title = 'Главное меню'
-        sm = ScreenManager()
+        self.sm = ScreenManager()
         main_screen = Screen(name='main')
-        sm.add_widget(main_screen)
-        sm.add_widget(self.modification_table())
-        sm.switch_to(main_screen)
+        self.sm.add_widget(main_screen)
+        self.sm.add_widget(self.modification_table())
+        self.sm.switch_to(main_screen)
 
         bl = BoxLayout(orientation='vertical')
 
@@ -209,7 +217,8 @@ class MyApp(App):
         bl_header.add_widget(spinner)
 
         def switch_to_mode(instance):
-            sm.current = 'mode'
+            self.sm.transition.direction = 'left'
+            self.sm.current = 'mode'
 
         bl_header.add_widget(Button(text='Модификация таблиц',
                                     on_press=switch_to_mode))
@@ -219,7 +228,7 @@ class MyApp(App):
         bl.add_widget(scroll)
 
         main_screen.add_widget(bl)
-        Window.add_widget(sm)
+        Window.add_widget(self.sm)
 
     def modification_table(self):
         """
@@ -245,7 +254,12 @@ class MyApp(App):
                              height=50)
 
         # создание лайаута для полей ввода
-        gl = GridLayout()
+        gl = GridLayout(size_hint_y=None,
+                        row_default_height=50,
+                        row_force_default=True)
+        gl.bind(minimum_height=gl.setter('height'))
+        scroll = ScrollView(size_hint=(1, None), size=(Window.width, Window.height -150))
+        scroll.add_widget(gl)
 
         # создание лайаута для вывода лейблов (что вводить?)
         bl_title_of_rows = BoxLayout(orientation='horizontal',
@@ -253,81 +267,157 @@ class MyApp(App):
                                      height=50)
 
         bl.add_widget(bl_title_of_rows)
-        bl.add_widget(gl)
-        bl.add_widget(Widget())
+        bl.add_widget(scroll)
         bl.add_widget(bl_modes)
 
         dict_of_modes = ('Добавить', 'Изменить', 'Удалить', 'Найти')
 
-        dict_of_data = {}
+        list_of_rows = []
 
         def action(instance):
-            # dict_of_data = {}
-            # if instance.text == 'Добавить':
-            #     for widget in bl_fields.children:
-            #         if widget.text and widget.text != 'выбрать':
-            #             dict_of_data.update({})
-            #     # util.add(spiner.text)
+            for widget in bl_modes.children[1:]:
+                widget.background_color = (0, 1, 0, 1)
             spiner.disabled = False
             instance.background_color = (0, 1, 1, 1)
+
+            if instance.text == 'Удалить' and len(list_of_rows) > 1:
+
+                temp = BoxLayout(orientation='vertical')
+
+                def yes(instance):
+                    util.delete(list_of_rows[0], list_of_rows[1:])
+                    widgets_on_remove = []
+                    for widget in gl.children[::-1]:
+                        if widget.id in list_of_rows[1:]:
+                            widgets_on_remove.append(widget)
+                    else:
+                        for widget in widgets_on_remove:
+                            gl.remove_widget(widget)
+                    del list_of_rows[1:]
+                    popup.dismiss()
+
+                temp.add_widget(Label(text='Вы уверены что хотите удалить выбранные записи?'))
+                temp.add_widget(Button(text='Да',
+                                       on_press=yes,
+                                       size_hint_y=None,
+                                       height=35,))
+                temp.add_widget(Button(text='Нет',
+                                       size_hint_y=None,
+                                       height=35,
+                                       on_press=lambda x: popup.dismiss()))
+                popup = Popup(title='Подтверждение удаления',
+                              size_hint=(None, None),
+                              size=(400, 400),
+                              content=temp)
+                popup.open()
+
 
         for title_of_mode in dict_of_modes:
             bl_modes.add_widget(Button(text=title_of_mode,
                                        background_color=(0, 1, 0, 1),
                                        on_press=action))
+        else:
+            bl_modes.add_widget(Button(text='Назад',
+                                       background_color=(1, 0, 0, 1),
+                                       on_press=lambda x: self.switch('main', 'right')))
 
         def show_selected_value(spinner, text):
             bl_title_of_rows.clear_widgets()
             gl.clear_widgets()
-            engl, rus = util.get_fields_add(text)
-            gl.cols = len(engl)
-            for title in rus:
-                bl_title_of_rows.add_widget(Button(text=title,
-                                                   size_hint_y=None,
-                                                   height=50,
-                                                   background_color=(0, 1, 0, 1),))
+            list_of_rows.clear()
+            list_of_rows.append(text)
+            mode = None
+            for widget in bl_modes.children:
+                if widget.background_color == [0, 1, 1, 1]:
+                    mode = widget.text
+                    break
 
-            for column in engl:
-                widget = None
-                if column.startswith('id_of_'):
-                    widget = Spinner(text='--- Выберите ---',
-                                     values=util.get_mini_table(column[6:]),)
-                else:
-                    widget = TextInput()
-                widget.id = column
-                widget.size_hint_y = None
-                widget.height = 50
-                gl.add_widget(widget)
-            else:
+            if mode == 'Добавить':
+                """
+                    Добавление в БД.
+                """
+                bl_title_of_rows.height = 50
+                engl, rus = util.get_fields_add(text)
+                gl.cols = len(engl)
+                for title in rus:
+                    bl_title_of_rows.add_widget(Button(text=title,
+                                                       size_hint_y=None,
+                                                       height=50,
+                                                       background_color=(0, 1, 0, 1),))
 
-                def add(instance):
-                    dict_of_data = {}
-                    instance.background_color, instance.text = (1, 1, 1, 1), 'Добавить'
-                    for widget in reversed(gl.children[1:]):
-                        if widget.text and widget.text.find('---') == -1:
-                            widget.background_color = (1, 1, 1, 1)
-                            dict_of_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
-                        else:
-                            instance.background_color = widget.background_color = (1, 0, 0, 1)
-                            return
-                    result = util.add(text, dict_of_data)
-                    if not result[0] and len(result) == 3:
-                        for widget in reversed(gl.children[1:]):
-                            if widget.id == result[1]:
-                                widget.text, widget.hint_text, widget.hint_text_color = '', result[2], (1, 0, 0, 1)
-                            else:
-                                widget.hint_text_color = (1, 1, 1, 1)
+                for column in engl:
+                    widget = None
+                    if column.startswith('id_of_'):
+                        widget = Spinner(text='--- Выберите ---',
+                                         values=util.get_mini_table(column[6:]),)
                     else:
-                        instance.background_color = (0, 1, 0, 1) if result[0] else (1, 0, 0, 1)
-                        instance.text = result[1]
+                        widget = TextInput()
+                    widget.id = column
+                    widget.size_hint_y = None
+                    widget.height = 50
+                    gl.add_widget(widget)
+                else:
+                    def add(instance):
+                        dict_of_data = {}
+                        instance.background_color, instance.text = (1, 1, 1, 1), 'Добавить'
+                        for widget in reversed(gl.children[1:]):
+                            if widget.text and widget.text.find('---') == -1:
+                                widget.background_color = (1, 1, 1, 1)
+                                dict_of_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+                            else:
+                                instance.background_color = widget.background_color = (1, 0, 0, 1)
+                                return
+                        result = util.add(text, dict_of_data)
+                        if not result[0] and len(result) == 3:
+                            for widget in reversed(gl.children[1:]):
+                                if widget.id == result[1]:
+                                    widget.text, widget.hint_text, widget.hint_text_color = '', result[2], (1, 0, 0, 1)
+                                else:
+                                    widget.hint_text_color = (1, 1, 1, 1)
+                        else:
+                            instance.background_color = (0, 1, 0, 1) if result[0] else (1, 0, 0, 1)
+                            instance.text = result[1]
 
+                    gl.add_widget(Button(text='Добавить',
+                                         on_press=add,
+                                         size_hint_y=None,
+                                         height=50))
+                    gl.add_widget(Widget())
 
-                gl.add_widget(Button(text='Добавить',
-                                     on_press=add,
-                                     size_hint_y=None,
-                                     height=50))
+            elif mode == 'Удалить':
+                """
+                    Удаление из бд
+                """
+                bl_title_of_rows.clear_widgets()
+                gl.clear_widgets()
+                table = gl
+                dict_of_data = util.read_tables(text)
+                table.cols = len(dict_of_data)
 
+                for key in dict_of_data.keys():
+                    bl_title_of_rows.add_widget(Button(text=key,
+                                                       height=50,
+                                                       size_hint_y=None,
+                                                       background_color=(0, 1, 0, 1)))
 
+                def action_on_db(instance):
+                    if not instance.id in list_of_rows:
+                        list_of_rows.append(instance.id)
+                        for widget in gl.children:
+                            if widget.id == instance.id:
+                                widget.background_color = (0, 1, 1, .5)
+                    else:
+                        list_of_rows.remove(instance.id)
+                        for widget in reversed(gl.children):
+                            if widget.id == instance.id:
+                                widget.background_color = (1, 1, 1, 1)
+
+                for row in zip(*dict_of_data.values()):
+                    id_of_row = row[0]
+                    for element in row:
+                        table.add_widget(Button(text=str(element),
+                                                id=str(id_of_row),
+                                                on_press=action_on_db))
 
 
         spiner.bind(text=show_selected_value)

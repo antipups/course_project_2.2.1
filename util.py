@@ -183,6 +183,8 @@ def add(name_of_table, dict_of_data):
     validation = eval('checker.' + name_of_table + '(dict_of_data)')
     if not validation[0]:
         return validation
+    if dict_of_data.get(None):
+        del dict_of_data[None]
     query = f'INSERT INTO {name_of_table} (' + ', '.join(dict_of_data.keys()) + ') VALUES ("' + '", "'.join(dict_of_data.values()) + '")'
     try:
         cursor.execute(query)
@@ -190,7 +192,7 @@ def add(name_of_table, dict_of_data):
         return (False, 'Такая запись уже есть')
     else:
         connect.commit()
-        return (True, 'Добавлено успешно')
+        return (True, 'Добавлено\n  успешно')
 
 
 def update(name_of_table, **data):
@@ -199,9 +201,9 @@ def update(name_of_table, **data):
     return None
 
 
-def delete(name_of_table, **data):
-    print(name_of_table, data)
-    print('sex3')
+def delete(name_of_table, data):
+    cursor.execute(f'DELETE FROM {rus_on_engl.get(name_of_table)} WHERE id = ' + ' OR id = '.join(data))
+    connect.commit()
     return None
 
 
@@ -248,6 +250,14 @@ def get_mini_table(table):
     elif table == 'privileges':
         table = 'privilege'
     return (str(row[0]) + ' | ' + row[1] for row in cursor.execute(f'SELECT * FROM {table}').fetchall())
+
+
+def get_fields_delete(table):
+    if table == 'type':
+        table = 'type_privilege'
+    elif table == 'privileges':
+        table = 'privilege'
+    return
 
 
 if __name__ == '__main__':

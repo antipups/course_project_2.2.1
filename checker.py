@@ -4,13 +4,13 @@ import re
 
 def social(dict_of_data):
     if not dict_of_data.get('title_of_social').isalpha():
-        return False, 'title_of_social', 'Не вводите цифры'
+        return False, 'title_of_social', 'Вводите ТОЛЬКО буквы'
     return (True,)
 
 
 def tariff(dict_of_data):
     if not dict_of_data.get('type').isalpha():
-        return False, 'type', 'Не вводите цифры'
+        return False, 'type', 'Вводите ТОЛЬКО буквы'
     if not re.search(r'\d{2}.\d{2}.\d{4}', dict_of_data.get('start')):
         return False, 'start', 'Введите в формате dd.mm.yyyy'
     if not re.search(r'\d{2}.\d{2}.\d{4}', dict_of_data.get('end')):
@@ -27,7 +27,7 @@ def tariff(dict_of_data):
 
 def type_privilege(dict_of_data):
     if not dict_of_data.get('title_of_privilege').isalpha():
-        return False, 'title_of_privilege', 'Не вводите цифры'
+        return False, 'title_of_privilege', 'Вводите ТОЛЬКО буквы'
     return (True,)
 
 
@@ -37,19 +37,19 @@ def privilege(dict_of_data):
 
 def district(dict_of_data):
     if not dict_of_data.get('title_of_district').isalpha():
-        return False, 'title_of_district', 'Не вводите цифры'
+        return False, 'title_of_district', 'Вводите ТОЛЬКО буквы'
     return (True,)
 
 
 def country(dict_of_data):
     if not dict_of_data.get('title_country').isalpha():
-        return False, 'title_country', 'Не вводите цифры'
+        return False, 'title_country', 'Вводите ТОЛЬКО буквы'
     return (True,)
 
 
 def city(dict_of_data):
     if not dict_of_data.get('title_of_city').isalpha():
-        return False, 'title_of_city', 'Не вводите цифры'
+        return False, 'title_of_city', 'Вводите ТОЛЬКО буквы'
     return (True,)
 
 
@@ -71,7 +71,9 @@ def call(dict_of_data):
 
 def ats(dict_of_data):
     if not dict_of_data.get('title').isalpha():
-        return False, 'title', 'Не вводите цифры'
+        return False, 'title', 'Вводите ТОЛЬКО буквы'
+    if dict_of_data.get('goverm') not in ('1', '0'):
+        return False, 'goverm', 'Введите 1 или 0'
     if not dict_of_data.get('year').isnumeric() or (dict_of_data.get('year').isnumeric() and (1900 > int(dict_of_data.get('year')) or int(dict_of_data.get('year')) > 2020)):
         return False, 'year', 'Должно быть число, от 1900 до 2020'
     return (True,)
@@ -79,11 +81,11 @@ def ats(dict_of_data):
 
 def abonent(dict_of_data):
     if not dict_of_data.get('first_name').isalpha():
-        return False, 'first_name', 'Не вводите цифры'
+        return False, 'first_name', 'Вводите ТОЛЬКО буквы'
     if not dict_of_data.get('second_name').isalpha():
-        return False, 'second_name', 'Не вводите цифры'
+        return False, 'second_name', 'Вводите ТОЛЬКО буквы'
     if not dict_of_data.get('third_name').isalpha():
-        return False, 'third_name', 'Не вводите цифры'
+        return False, 'third_name', 'Вводите ТОЛЬКО буквы'
     if not dict_of_data.get('phone').isnumeric():
         return False, 'phone', 'Должно быть 10 цифр'
     return (True,)
