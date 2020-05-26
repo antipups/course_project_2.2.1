@@ -275,10 +275,18 @@ class MyApp(App):
         list_of_rows = []
 
         def action(instance):
+            """
+                При нажатии на кнопку какого-либо мода, двойное удаление и прочее прочее
+            :param instance:
+            :return:
+            """
             for widget in bl_modes.children[1:]:
                 if widget.background_color == [0, 1, 1, 1] and widget.text == 'Удалить' and widget == instance:
 
                     if len(list_of_rows) > 1:
+                        """
+                            Если нажали на таблицу и выбрали записи на удаление
+                        """
                         temp = BoxLayout(orientation='vertical')
 
                         def yes(instance):
@@ -309,6 +317,9 @@ class MyApp(App):
                         popup.open()
                         break
                     elif len(list_of_rows) == 1:
+                        """
+                            Если нажали на удалить и не выбрали ЗАПИСЬ
+                        """
                         temp = BoxLayout(orientation='vertical')
                         engl, rus = util.get_fields_add(list_of_rows[0])
                         for column in engl:
@@ -355,6 +366,22 @@ class MyApp(App):
                             temp.add_widget(button_layout)
 
                         popup = Popup(title='Удаление через поля',
+                                      size_hint=(None, None),
+                                      size=(400, 400),
+                                      content=temp)
+                        popup.open()
+                        break
+                    else:
+                        """
+                            Если нажали на удалить и не выбрали ТАБЛИЦУ
+                        """
+                        temp = BoxLayout(orientation='vertical')
+                        temp.add_widget(Label(text='Сначала выберите таблицу!!!'))
+                        temp.add_widget(Button(text='Хорошо',
+                                               on_press=lambda x: popup.dismiss(),
+                                               size_hint_y=None,
+                                               height=35))
+                        popup = Popup(title='Предупреждение',
                                       size_hint=(None, None),
                                       size=(400, 400),
                                       content=temp)
