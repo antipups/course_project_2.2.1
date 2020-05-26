@@ -525,6 +525,31 @@ class MyApp(App):
                       content=temp)
         popup.open()
 
+    def find_row(self, gl, list_of_row, amount_fields):
+        name_of_table = list_of_row[0]
+        dict_of_data = {}
+        widgets_in_trash = []
+        for widget in gl.children[:-amount_fields]:
+            widgets_in_trash.append(widget)
+        else:
+            for widget in widgets_in_trash:
+                gl.remove_widget(widget)
+
+        for widget in gl.children[-amount_fields:]:
+            if widget.text and widget.text.find('---') == -1:
+                dict_of_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+        else:
+            result = util.find(name_of_table, dict_of_data)
+            if not result[1]:
+                return
+            for row in zip(*result[0].values()):
+                if row[0] not in result[1]:
+                    continue
+                for element in row[1:]:
+                    gl.add_widget(Button(text=str(element),))
+
+
+
     def modification_table(self):
             """
                 Экран модификации данных в таблицах
@@ -576,7 +601,6 @@ class MyApp(App):
                 :return:
                 """
                 for widget in bl_modes.children[1:]:
-
                     if widget.background_color == [0, 1, 1, 1] and widget.text in ('Удалить', 'Изменить') and widget == instance:
                         """
                             При повторном нажатии на кнопку, есть 3 состояния, записи выбраны, не выбраны, и не выбрана таблицы
@@ -603,6 +627,13 @@ class MyApp(App):
                             self.popup_attention()
                             break
 
+                    if widget.background_color == [0, 1, 1, 1] and widget.text == 'Найти' and widget == instance:
+                        if len(list_of_rows) > 0:
+                            self.find_row(gl, list_of_rows, len(bl_title_of_rows.children))
+                            widget.background_color = (0, 1, 1, 1)
+                        else:
+                            self.popup_attention()
+                        break
                     else:
                         widget.background_color = (0, 1, 0, 1)
                 else:
@@ -610,6 +641,7 @@ class MyApp(App):
                         Если сюда зашли, то есть цикл успешно завершился,
                         то это просто смена режима и мы сбрасываем все таблицы и данные
                     """
+                    list_of_rows.clear()
                     spiner.text = 'Выберите таблицу для редактирования'
                     bl_title_of_rows.clear_widgets()
                     gl.clear_widgets()
@@ -633,6 +665,8 @@ class MyApp(App):
                 :param text:
                 :return:
                 """
+                if text == 'Выберите таблицу для редактирования':
+                    return
                 bl_title_of_rows.clear_widgets()
                 gl.clear_widgets()
                 list_of_rows.clear()
@@ -729,6 +763,27 @@ class MyApp(App):
                             table.add_widget(Button(text=str(element),
                                                     id=str(id_of_row),
                                                     on_press=action_on_db))
+                elif mode == 'Найти':
+                    bl_title_of_rows.height = 50
+                    engl, rus = util.get_fields_add(text)
+                    gl.cols = len(engl)
+                    for title in rus:
+                        bl_title_of_rows.add_widget(Button(text=title,
+                                                           size_hint_y=None,
+                                                           height=50,
+                                                           background_color=(0, 1, 0, 1), ))
+
+                    for column in engl:
+                        widget = None
+                        if column.startswith('id_of_'):
+                            widget = Spinner(text='--- Выберите ---',
+                                             values=util.get_mini_table(column[6:]), )
+                        else:
+                            widget = TextInput()
+                        widget.id = column
+                        widget.size_hint_y = None
+                        widget.height = 50
+                        gl.add_widget(widget)
 
             spiner.bind(text=show_selected_value)
             # bl.add_widget(Widget())

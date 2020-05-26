@@ -219,10 +219,11 @@ def delete(name_of_table, data):
     return None
 
 
-def find(name_of_table, **data):
-    print(name_of_table, data)
-    print('sex4')
-    return None
+def find(name_of_table, dict_of_data):
+    result = 'SELECT id ' \
+             f'FROM {rus_on_engl.get(name_of_table)} ' \
+             'WHERE ' + ' AND '.join(key + ' = "' + value + '"' for key, value in dict_of_data.items())
+    return read_tables(name_of_table), tuple(row[0] for row in cursor.execute(result).fetchall())
 
 
 def get_fields_add(name_of_table):
@@ -292,7 +293,6 @@ def check_row(name_of_table, dict_of_old_data):
     query = 'SELECT * ' \
             f'FROM {name_of_table} WHERE ' \
             f'' + '" AND '.join((key + ' = "' + value for key, value in dict_of_old_data.items())) + '"'
-    print(query)
     if len(cursor.execute(query).fetchall()) > 0:
         return True
     else:
@@ -306,7 +306,6 @@ def update_rows(name_of_table, dict_of_old_data, dict_of_new_data):
         return check
     query = f'UPDATE {name_of_table} SET ' + ', '.join(key + ' = "' + value + '"' for key, value in dict_of_new_data.items()) \
             + " WHERE " + ' AND '.join(key + ' = "' + value + '"' for key, value in dict_of_old_data.items())
-    print(query)
     try:
         cursor.execute(query)
     except:
