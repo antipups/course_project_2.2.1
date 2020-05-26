@@ -171,11 +171,12 @@ class MyApp(App):
             главное меню.
         :return:
         """
-        self.title = 'Главное меню'
+        self.title = 'Курсовой проект'
         self.sm = ScreenManager()
         main_screen = Screen(name='main')
         self.sm.add_widget(main_screen)
         self.sm.add_widget(self.modification_table())
+        self.sm.add_widget(self.query_screen())
         self.sm.switch_to(main_screen)
 
         bl = BoxLayout(orientation='vertical')
@@ -205,7 +206,8 @@ class MyApp(App):
             for key in dict_of_data.keys():
                 table.add_widget(Button(text=key,
                                         height=50,
-                                        size_hint_y=None))
+                                        size_hint_y=None,
+                                        background_color=(0, 1, 0, 1)))
 
             for row in zip(*dict_of_data.values()):
                 for element in row:
@@ -220,9 +222,14 @@ class MyApp(App):
             self.sm.transition.direction = 'left'
             self.sm.current = 'mode'
 
+        def switch_to_query(instance):
+            self.sm.transition.direction = 'right'
+            self.sm.current = 'query'
+
         bl_header.add_widget(Button(text='Модификация таблиц',
                                     on_press=switch_to_mode))
-        bl_header.add_widget(Button(text='Запросы'))
+        bl_header.add_widget(Button(text='Запросы',
+                                    on_press=switch_to_query))
         bl.add_widget(bl_header)
 
         bl.add_widget(scroll)
@@ -548,8 +555,6 @@ class MyApp(App):
                 for element in row[1:]:
                     gl.add_widget(Button(text=str(element),))
 
-
-
     def modification_table(self):
             """
                 Экран модификации данных в таблицах
@@ -786,8 +791,17 @@ class MyApp(App):
                         gl.add_widget(widget)
 
             spiner.bind(text=show_selected_value)
-            # bl.add_widget(Widget())
             return mode_screen
+
+    def query_screen(self):
+        screen = Screen(name='query')
+        main_bl = BoxLayout(orientation='horizontal')
+
+        spinner = Spinner(text='Выберите запрос или действие',
+                          values=[])
+
+        screen.add_widget(main_bl)
+        return screen
 
 
 if __name__ == '__main__':
