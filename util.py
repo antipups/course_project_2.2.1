@@ -195,10 +195,22 @@ def add(name_of_table, dict_of_data):
         return (True, 'Добавлено\n  успешно')
 
 
-def update(name_of_table, **data):
-    print(name_of_table, data)
-    print('sex2')
-    return None
+def update(name_of_table, ids, new_data):
+    check = checker.check_all(new_data)
+    if not check[0]:
+        return check
+    name_of_table = rus_on_engl.get(name_of_table)
+    query = f'UPDATE {name_of_table} SET ' + ' AND '.join(key + ' = "' + value + '"' for key, value in new_data.items()) \
+            + " WHERE id = " + ' OR id = '.join(ids.get('id'))
+    try:
+        cursor.execute(query)
+    except sqlite3.IntegrityError:      # не укникум когда нужен уникум
+        return (False, )
+    except sqlite3.OperationalError:    # неверный ввод
+        return (False, )
+    else:
+        connect.commit()
+        return (True, )
 
 
 def delete(name_of_table, data):
