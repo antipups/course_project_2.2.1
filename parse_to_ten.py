@@ -14,3 +14,5 @@ connect = sqlite3.connect('db.db')
 cursor = connect.cursor()
 
 cursor.execute(text)
+connect.commit()
+connect.close()
