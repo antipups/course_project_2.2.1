@@ -105,7 +105,7 @@ def read_tables(name_of_table_rus):
         'Соц. положение': ('social', {'ID': [], 'Название соц. положения': []}),
         'Льгота': ('privilege', {'ID': [], 'Условие по оплате': [], 'Тариф льготы': [], 'Тип льготы': []}),
         'Тариф': ('tariff', {'ID': [], 'Тип тарифа': [], 'Дата начала': [], 'Дата конца': [], 'Коэфициент': []}),
-        'Абонент': ('abonent', {'ID': [], 'Фамилия': [], 'Имя': [], 'Отчество': [], 'Телефон': [], 'Адрес': [], 'Документ': [], 'Соц. положение': []}),
+        'Абонент': ('abonent', {'ID': [], 'Имя': [], 'Фамилия': [], 'Отчество': [], 'Телефон': [], 'Адрес': [], 'Документ': [], 'Соц. положение': []}),
         'АТС': ('ats', {'ID': [], 'Название': [], 'Район': [], 'Адрес': [], 'Год открытия': [], 'Государственная': [], 'Лицензия': []}),
         'Звонок': ('call', {'ID': [], 'Город': [], 'Цена': [], 'Номер телефона': [], 'Дата звонка': [], 'Длительность': [], 'Тариф': [], 'Абонент': [], 'АТС': [], 'Льгота': []}),
     }.get(name_of_table_rus)
@@ -200,7 +200,7 @@ def update(name_of_table, ids, new_data):
     if not check[0]:
         return check
     name_of_table = rus_on_engl.get(name_of_table)
-    query = f'UPDATE {name_of_table} SET ' + ' AND '.join(key + ' = "' + value + '"' for key, value in new_data.items()) \
+    query = f'UPDATE {name_of_table} SET ' + ', '.join(key + ' = "' + value + '"' for key, value in new_data.items()) \
             + " WHERE id = " + ' OR id = '.join(ids.get('id'))
     try:
         cursor.execute(query)
@@ -285,3 +285,32 @@ def delete_on_row(name_of_table, dict_of_data):
     cursor.execute(query)
     connect.commit()
     return list_of_pop_rows
+
+
+def check_row(name_of_table, dict_of_old_data):
+    name_of_table = rus_on_engl.get(name_of_table)
+    query = 'SELECT * ' \
+            f'FROM {name_of_table} WHERE ' \
+            f'' + '" AND '.join((key + ' = "' + value for key, value in dict_of_old_data.items())) + '"'
+    print(query)
+    if len(cursor.execute(query).fetchall()) > 0:
+        return True
+    else:
+        return False
+
+
+def update_rows(name_of_table, dict_of_old_data, dict_of_new_data):
+    name_of_table = rus_on_engl.get(name_of_table)
+    check = checker.check_all(dict_of_new_data)
+    if not check[0]:
+        return check
+    query = f'UPDATE {name_of_table} SET ' + ', '.join(key + ' = "' + value + '"' for key, value in dict_of_new_data.items()) \
+            + " WHERE " + ' AND '.join(key + ' = "' + value + '"' for key, value in dict_of_old_data.items())
+    print(query)
+    try:
+        cursor.execute(query)
+    except:
+        return (False, )
+    else:
+        connect.commit()
+        return (True, )

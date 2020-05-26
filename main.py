@@ -337,7 +337,7 @@ class MyApp(App):
                       content=temp)
         popup.open()
 
-    def popup_for_update_rows(self, gl, list_of_rows, spiner):
+    def popup_for_update_rows(self, gl, list_of_rows):
         """
             Изменение выбранных строк
         :param gl:
@@ -429,6 +429,102 @@ class MyApp(App):
                       content=temp)
         popup.open()
 
+    def popup_for_update_on_fields(self, gl, list_of_rows):
+        temp = BoxLayout(orientation='vertical')
+        engl, rus = util.get_fields_add(list_of_rows[0])
+        for column in engl:
+            widget = None
+            if column.startswith('id_of_'):
+                widget = Spinner(text='--- Выберите ---',
+                                 values=util.get_mini_table(column[6:]), )
+            else:
+                widget = TextInput(hint_text=rus[engl.index(column)])
+            widget.id = column
+            widget.size_hint_y = None
+            widget.height = 35
+            temp.add_widget(widget)
+        else:
+            temp.add_widget(Widget())
+
+            button_layout = BoxLayout(orientation='horizontal')
+            button_layout.add_widget(Button(text='Отмена',
+                                            on_press=lambda x: popup.dismiss(),
+                                            size_hint_y=None,
+                                            height=35))
+
+            dict_of_old_data = {}
+
+            def update(instance):
+                if instance.background_color == [1, 1, 1, 1] or instance.background_color == [1, 0, 0, 1]:
+                    dict_of_old_data.clear()
+                    for widget in temp.children[2:]:
+                        if widget.text and widget.text.find('---') == -1:
+                            dict_of_old_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+                    else:
+                        if len(dict_of_old_data) > 0:
+                            result = util.check_row(list_of_rows[0], dict_of_old_data)
+                            if result:
+                                instance.background_color = (0, 1, 1, 1)
+                                popup.title = 'Введите новые значения записей'
+                            else:
+                                instance.background_color = (1, 0, 0, 1)
+                                popup.title = 'Не найденно существующих записей'
+                else:
+                    dict_of_new_data = {}
+                    for widget in temp.children[2:]:
+                        if widget.text and widget.text.find('---') == -1:
+                            dict_of_new_data.update({widget.id: widget.text if widget.text.find('|') == -1 else widget.text[:widget.text.find(' |')]})
+                    else:
+                        if len(dict_of_new_data) > 0:
+                            result = util.update_rows(list_of_rows[0], dict_of_old_data, dict_of_new_data)
+                            if not result[0]:
+                                instance.background_color = (0, 1, 1, 1)
+                                if len(result) > 1:
+                                    for widget in temp.children:
+                                        if widget.id == result[1]:
+                                            widget.text = ''
+                                            widget.hint_text_color = (1, 0, 0, 1)
+                                            widget.hint_text = result[-1]
+                                            break
+                                    return
+                            popup.dismiss()
+                            gl.clear_widgets()
+                            table = gl
+                            dict_of_data = util.read_tables(list_of_rows[0])
+                            table.cols = len(dict_of_data)
+
+                            def action_on_db(instance):
+                                if not instance.id in list_of_rows:
+                                    list_of_rows.append(instance.id)
+                                    for widget in gl.children:
+                                        if widget.id == instance.id:
+                                            widget.background_color = (0, 1, 1, .5)
+                                else:
+                                    list_of_rows.remove(instance.id)
+                                    for widget in reversed(gl.children):
+                                        if widget.id == instance.id:
+                                            widget.background_color = (1, 1, 1, 1)
+
+                            for row in zip(*dict_of_data.values()):
+                                id_of_row = row[0]
+                                for element in row:
+                                    table.add_widget(Button(text=str(element),
+                                                            id=str(id_of_row),
+                                                            on_press=action_on_db))
+
+            button_layout.add_widget(Button(text='Изменить',
+                                            on_press=update,
+                                            size_hint_y=None,
+                                            height=35))
+
+            temp.add_widget(button_layout)
+
+        popup = Popup(title='Введите поля по которым будет редактирование',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
     def modification_table(self):
             """
                 Экран модификации данных в таблицах
@@ -492,13 +588,13 @@ class MyApp(App):
                             """
                                 Если нажали на таблицу и выбрали записи на удаление / изменение
                             """
-                            self.popup_for_delete_rows(gl, list_of_rows) if instance.text == 'Удалить' else self.popup_for_update_rows(gl, list_of_rows, spiner)
+                            self.popup_for_delete_rows(gl, list_of_rows) if instance.text == 'Удалить' else self.popup_for_update_rows(gl, list_of_rows)
                             break
                         elif len(list_of_rows) == 1 and list_of_rows[0] != 'Выберите таблицу для редактирования':
                             """
                                 Если нажали на удалить / изменить и не выбрали ЗАПИСЬ
                             """
-                            self.popup_for_delete_on_fields(gl, list_of_rows)
+                            self.popup_for_delete_on_fields(gl, list_of_rows) if instance.text == 'Удалить' else self.popup_for_update_on_fields(gl, list_of_rows)
                             break
                         else:
                             """
