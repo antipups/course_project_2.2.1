@@ -806,7 +806,12 @@ class MyApp(App):
         main_bl = BoxLayout(orientation='horizontal')
 
         spinner = Spinner(text='Выберите запрос или действие',
-                          values=['Вывести все Льготы по указанному типу'],
+                          values=['Вывести все Льготы по указанному типу',
+                                  'Вывести все Звонки по городу и дате',
+                                  'Вывести самый длинный звонок в\nгороде и в определенный день',
+                                  'Вывести все АТС в заданному районе',
+                                  'Вывести всех Абонентов по статусу',
+                                  'Получение всех звонков по\nопределенному городу до опреде-\nлённого числа'],
                           size_hint=(None, None),
                           size=(300, 50))
 
@@ -818,9 +823,15 @@ class MyApp(App):
             :param text:
             :return:
             """
-            {'Вывести все Льготы по указанному типу\n'
-             '(Внутренне симметричный запрос по внешн. ключу)': self.first_query(table),
-             }.get(text)
+            func_ = {'Вывести все Льготы по указанному типу': self.first_query,
+                     'Вывести все Звонки по городу и дате': self.second_query,
+                     'Вывести самый длинный звонок в\nгороде и в определенный день': self.third_query,
+                     'Вывести все АТС в заданному районе': self.fourth_query,
+                     'Вывести всех Абонентов по статусу': self.fifth_query,
+                     'Получение всех звонков по\nопределенному городу до опреде-\nлённого числа': self.sixth_query,
+                     }.get(text)
+            table.clear_widgets()
+            func_(table)
 
         # всё до конца функции это генерация рабочего пространства, правая панель это table
         spinner.bind(text=selected_item)
@@ -883,8 +894,8 @@ class MyApp(App):
         temp = BoxLayout(orientation='vertical')
         temp.add_widget(Spinner(text='--- Выберите тип ---',
                                 values=util.get_mini_table('type_privilege'),
-                                size_hint_y = None,
-                                height = 35,
+                                size_hint_y=None,
+                                height=35,
                                 id='spinner'))
         temp.add_widget(Widget())
 
@@ -898,6 +909,316 @@ class MyApp(App):
                       size=(400, 400),
                       content=temp)
         popup.open()
+
+    def second_query(self, gl):
+        """
+            Второй запрос внутренне симмистричный на получение Звонков через город и дату
+            Симметричный по внешнему и дате
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            city, date = None, None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    city = widget.text
+                if widget.id == 'input' and widget.text:
+                    date = widget.text
+
+            if not city or not date:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.second_query(city[:city.find(' | ')], date)
+
+            dict_of_data = util.read_tables('Звонок')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите город ---',
+                                values=util.get_mini_table('city'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(TextInput(hint_text='Введите дату в формате dd.mm.yyyy',
+                                  size_hint_y=None,
+                                  height=35,
+                                  id='input'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение звонков через город и дату',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def third_query(self, gl):
+        """
+            Третий запрос внутренне симитричный с датой на больший звонок
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            city, date = None, None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    city = widget.text
+                if widget.id == 'input' and widget.text:
+                    date = widget.text
+
+            if not city or not date:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.third_query(city[:city.find(' | ')], date)
+
+            dict_of_data = util.read_tables('Звонок')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите город ---',
+                                values=util.get_mini_table('city'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(TextInput(hint_text='Введите дату в формате dd.mm.yyyy',
+                                  size_hint_y=None,
+                                  height=35,
+                                  id='input'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение самого длинного звонка через город и дату',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def fourth_query(self, gl):
+        """
+            Левое внешнее соединение, на выходе имеем АТС
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            district = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    district = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.fourth_query(district[:district.find(' | ')])
+
+            dict_of_data = util.read_tables('АТС')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите район ---',
+                                values=util.get_mini_table('district'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение всех АТС по определенному району',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def fifth_query(self, gl):
+        """
+            Правое внешнее соединение на выходе имеем абонента
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            social = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    social = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.fifth_query(social[:social.find(' | ')])
+
+            dict_of_data = util.read_tables('Абонент')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите статус ---',
+                                values=util.get_mini_table('social'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение всех абонентов по статусу',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def sixth_query(self, gl):
+        """
+            Левое соединение на выходе имеем звонок
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            city, date = None, None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    city = widget.text
+                if widget.id == 'input' and widget.text:
+                    date = widget.text
+
+            if not city or not date:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.sixth_query(city[:city.find(' | ')], date)
+
+            dict_of_data = util.read_tables('Звонок')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите город ---',
+                                values=util.get_mini_table('city'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(TextInput(hint_text='Введите дату в формате dd.mm.yyyy',
+                                  size_hint_y=None,
+                                  height=35,
+                                  id='input'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение всех звонков до определенного\nчисла, в определенном городе',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
 
 if __name__ == '__main__':
     MyApp().run()

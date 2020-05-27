@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 import checker
@@ -330,8 +331,46 @@ def first_query(id_of_type):
     return tuple(row[0] for row in cursor.execute(query).fetchall())
 
 
-def first_query(id_of_type):
+def second_query(id_of_city, date):
     query = 'SELECT id ' \
-            'FROM privilege ' \
-            f'WHERE privilege.id_of_type = {id_of_type}'
+            'FROM call ' \
+            f'WHERE call.id_of_city = {id_of_city} ' \
+            f'      AND call.date_of_call = "{date}"'
     return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def third_query(id_of_city, date):
+    query = 'SELECT id ' \
+            'FROM call ' \
+            f'WHERE call.id_of_city = {id_of_city} ' \
+            f'      AND call.date_of_call = "{date}"' \
+            'ORDER BY call.duration DESC ' \
+            'LIMIT 1'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def fourth_query(id_of_district):
+    query = 'SELECT ats.id ' \
+            'FROM ats ' \
+            f'LEFT OUTER JOIN district d on ats.id_of_district = {id_of_district}'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def fifth_query(id_of_social):
+    query = 'SELECT a.id ' \
+            'FROM social ' \
+            f'LEFT OUTER JOIN abonent a on social.id = a.id_of_social AND social.id = {id_of_social}'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def sixth_query(id_of_city, date):
+    query = 'SELECT * ' \
+            'FROM call ' \
+            f'LEFT JOIN city c on `call`.id_of_city = c.id AND c.id = {id_of_city} ' \
+            'INNER JOIN abonent a on `call`.id_of_abonent = a.id'
+    result = []
+    for row in cursor.execute(query).fetchall():
+        if datetime.datetime.strptime(row[4], '%d.%m.%Y') < datetime.datetime.strptime(date, '%d.%m.%Y'):
+            result.append(row[0])
+
+    return result

@@ -22,3 +22,9 @@
 
 
 # 'DELETE FROM city WHERE id > 0 '
+''
+
+'SELECT * FROM call ' \
+'LEFT JOIN city c ON `call`.id_of_city = c.id ' \
+'INNER JOIN abonent a on `call`.id_of_abonent = a.id'
+
