@@ -411,17 +411,50 @@ def ninth_query(id_of_ats):
 
 
 def task1(id_of_ats):
-    query = 'SELECT s.title_of_social AS soc,' \
-            '       COUNT(s.title_of_social) AS amount ' \
-            'FROM call ' \
-            'INNER JOIN city c on `call`.id_of_city = c.id ' \
-            'INNER JOIN abonent a on `call`.id_of_abonent = a.id ' \
-            'INNER JOIN social s on a.id_of_social = s.id ' \
-            f'WHERE call.id_of_ats = {id_of_ats} ' \
-            'GROUP BY s.title_of_social '
+    if id_of_ats != '0':
+        query = 'SELECT s.title_of_social AS soc,' \
+                '       COUNT(s.title_of_social) AS amount ' \
+                'FROM call ' \
+                'INNER JOIN city c on `call`.id_of_city = c.id ' \
+                'INNER JOIN abonent a on `call`.id_of_abonent = a.id ' \
+                'INNER JOIN social s on a.id_of_social = s.id ' \
+                f'WHERE call.id_of_ats = {id_of_ats} ' \
+                'GROUP BY s.title_of_social '
+    else:
+        query = 'SELECT s.title_of_social AS soc,' \
+                '       COUNT(s.title_of_social) AS amount ' \
+                'FROM call ' \
+                'INNER JOIN city c on `call`.id_of_city = c.id ' \
+                'INNER JOIN abonent a on `call`.id_of_abonent = a.id ' \
+                'INNER JOIN social s on a.id_of_social = s.id ' \
+                'GROUP BY s.title_of_social '
     query = 'SELECT q.soc AS "Социальный статус", ' \
             '       MAX(q.amount) AS "Количество пользователей"' \
             'FROM (' + query + ') as q'
+    cursor.execute(query)
+    title_of_rows = tuple(title[0] for title in cursor.description)
+    return title_of_rows, cursor.fetchall()
+
+
+def task2(id_of_ats):
+    if id_of_ats != '0':
+        query = 'SELECT a.title AS "АТС",' \
+                '       AVG(call.duration) AS "Среднее время разговора" ' \
+                'FROM call ' \
+                f'INNER JOIN ats a on `call`.id_of_ats = a.id AND a.id = {id_of_ats} '
+    else:
+        query = 'SELECT AVG(call.duration) AS "Средняя длительность по городу" ' \
+                'FROM call '
+    cursor.execute(query)
+    title_of_rows = tuple(title[0] for title in cursor.description)
+    return title_of_rows, cursor.fetchall()
+
+
+def task3(date):
+    query = 'SELECT COUNT(call.date_of_call) AS "Количество переговоров",' \
+            '       SUM(call.duration * call.price) AS "Суммарная цена" ' \
+            'FROM call ' \
+            f'WHERE call.date_of_call LIKE "%{date}"'
     cursor.execute(query)
     title_of_rows = tuple(title[0] for title in cursor.description)
     return title_of_rows, cursor.fetchall()

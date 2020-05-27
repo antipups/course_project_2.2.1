@@ -815,7 +815,9 @@ class MyApp(App):
                                   'Получение звонков выше\nопределенной стоимости',
                                   'Получение количества звон-\nков по определенной АТС',
                                   'Получение самого длинного\nзвонка по определенной АТС',
-                                  'Кто чаще пользуется услугами АТС',
+                                  'Задание 1',
+                                  'Задание 2',
+                                  'Задание 3',
                                   'Назад'],
                           size_hint=(None, None),
                           size=(300, 50))
@@ -832,6 +834,7 @@ class MyApp(App):
                 return
             if text == 'Назад':
                 self.switch('main', 'left')
+                spinner.text = 'Выберите запрос или действие'
                 return
             func_ = {'Вывести все Льготы по указанному типу': self.first_query,
                      'Вывести все Звонки по городу и дате': self.second_query,
@@ -842,7 +845,9 @@ class MyApp(App):
                      'Получение звонков выше\nопределенной стоимости': self.seventh_query,
                      'Получение количества звон-\nков по определенной АТС': self.eight_query,
                      'Получение самого длинного\nзвонка по определенной АТС': self.ninth_query,
-                     'Кто чаще пользуется услугами АТС': self.task1,
+                     'Задание 1': self.task1,
+                     'Задание 2': self.task2,
+                     'Задание 3': self.task3,
                      }.get(text)
             table.clear_widgets()
             func_(table)
@@ -1427,11 +1432,14 @@ class MyApp(App):
                 if widget.id == 'spinner' and widget.text.find('---') == -1:
                     ats = widget.text
                     break
+                elif widget.id == 'spinner' and widget.text.find('---') > -1:
+                    ats = '0'
+                    break
             else:
                 instance.background_color = (1, 0, 0, 1)
                 return
 
-            title_of_rows, data = util.task1(ats[:ats.find(' | ')])
+            title_of_rows, data = util.task1(ats[:ats.find(' | ')] if ats != '0' else '0')
             gl.cols = len(title_of_rows)
 
             for title in title_of_rows:
@@ -1466,6 +1474,119 @@ class MyApp(App):
                       content=temp)
         popup.open()
 
+    def task2(self, gl):
+        """
+            Вывод с условием на группы и данные
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            ats = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    ats = widget.text
+                    break
+                elif widget.id == 'spinner' and widget.text.find('---') > -1:
+                    ats = '0'
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            title_of_rows, data = util.task2(ats[:ats.find(' | ')] if ats != '0' else '0')
+            gl.cols = len(title_of_rows)
+
+            for title in title_of_rows:
+                gl.add_widget(Button(text=title,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(data):
+                row = row[0]
+                for element in row:
+                    gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите АТС ---',
+                                values=util.get_mini_table('ats'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение средней длительности разговора',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def task3(self, gl):
+        """
+            Вывод с условием на группы и данные
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            date = None
+            for widget in temp.children:
+                if widget.id == 'input' and widget.text and re.search(r'\d{2}.\d{4}', widget.text):
+                    date = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            title_of_rows, data = util.task3(date)
+            gl.cols = len(title_of_rows)
+
+            for title in title_of_rows:
+                gl.add_widget(Button(text=title,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(data):
+                row = row[0]
+                for element in row:
+                    gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(TextInput(hint_text='Введите дату в формате mm.yyyy',
+                                  size_hint_y=None,
+                                  height=35,
+                                  id='input'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение количества операций и их суммы',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
 
 
 if __name__ == '__main__':
