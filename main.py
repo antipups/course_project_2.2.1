@@ -811,7 +811,12 @@ class MyApp(App):
                                   'Вывести самый длинный звонок в\nгороде и в определенный день',
                                   'Вывести все АТС в заданному районе',
                                   'Вывести всех Абонентов по статусу',
-                                  'Получение всех звонков по\nопределенному городу до опреде-\nлённого числа'],
+                                  'Получение всех звонков по\nопределенному городу до опреде-\nлённого числа',
+                                  'Получение звонков выше\nопределенной стоимости',
+                                  'Получение количества звон-\nков по определенной АТС',
+                                  'Получение самого длинного\nзвонка по определенной АТС',
+                                  'Кто чаще пользуется услугами АТС',
+                                  'Назад'],
                           size_hint=(None, None),
                           size=(300, 50))
 
@@ -823,15 +828,26 @@ class MyApp(App):
             :param text:
             :return:
             """
+            if text == 'Выберите запрос или действие':
+                return
+            if text == 'Назад':
+                self.switch('main', 'left')
+                return
             func_ = {'Вывести все Льготы по указанному типу': self.first_query,
                      'Вывести все Звонки по городу и дате': self.second_query,
                      'Вывести самый длинный звонок в\nгороде и в определенный день': self.third_query,
                      'Вывести все АТС в заданному районе': self.fourth_query,
                      'Вывести всех Абонентов по статусу': self.fifth_query,
                      'Получение всех звонков по\nопределенному городу до опреде-\nлённого числа': self.sixth_query,
+                     'Получение звонков выше\nопределенной стоимости': self.seventh_query,
+                     'Получение количества звон-\nков по определенной АТС': self.eight_query,
+                     'Получение самого длинного\nзвонка по определенной АТС': self.ninth_query,
+                     'Кто чаще пользуется услугами АТС': self.task1,
                      }.get(text)
             table.clear_widgets()
             func_(table)
+            title_of_query.text = text
+            spinner.text = 'Выберите запрос или действие'
 
         # всё до конца функции это генерация рабочего пространства, правая панель это table
         spinner.bind(text=selected_item)
@@ -839,6 +855,9 @@ class MyApp(App):
                             size_hint_x=None,
                             width=300)
         temp_bl.add_widget(spinner)
+        title_of_query = Label(size_hint_y=None,
+                               height=100)
+        temp_bl.add_widget(title_of_query)
         temp_bl.add_widget(Widget())
         main_bl.add_widget(temp_bl)
 
@@ -1218,6 +1237,235 @@ class MyApp(App):
                       size=(400, 400),
                       content=temp)
         popup.open()
+
+    def seventh_query(self, gl):
+        """
+            Запрос на данные
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            price = None
+            for widget in temp.children:
+                if widget.id == 'input' and widget.text:
+                    if widget.text.isnumeric():
+                        price = widget.text
+                        break
+                    else:
+                        widget.text, widget.hint_text_color = '', (1, 0, 0, 1)
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.seventh_query(price)
+
+            dict_of_data = util.read_tables('Звонок')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(TextInput(hint_text='Введите цену выше которой требуется звонок',
+                                  size_hint_y=None,
+                                  height=35,
+                                  id='input'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение всех звонков выше определенной стоимости',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def eight_query(self, gl):
+        """
+            Вывод с условием на группы
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            ats = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    ats = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            title_of_rows, data = util.eight_query(ats[:ats.find(' | ')])
+            gl.cols = len(title_of_rows)
+
+            for title in title_of_rows:
+                gl.add_widget(Button(text=title,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(data):
+                row = row[0]
+                for element in row:
+                    gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите АТС ---',
+                                values=util.get_mini_table('ats'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение количества зконков у определенной АТС',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def ninth_query(self, gl):
+        """
+            Вывод с условием на группы и данные
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            ats = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    ats = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            title_of_rows, data = util.ninth_query(ats[:ats.find(' | ')])
+            gl.cols = len(title_of_rows)
+
+            for title in title_of_rows:
+                gl.add_widget(Button(text=title,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(data):
+                row = row[0]
+                for element in row:
+                    gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите АТС ---',
+                                values=util.get_mini_table('ats'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение самого длинного звока за каждый день от определенной АТС',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
+    def task1(self, gl):
+        """
+            Вывод с условием на группы и данные
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            ats = None
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    ats = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            title_of_rows, data = util.task1(ats[:ats.find(' | ')])
+            gl.cols = len(title_of_rows)
+
+            for title in title_of_rows:
+                gl.add_widget(Button(text=title,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(data):
+                row = row[0]
+                for element in row:
+                    gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите АТС ---',
+                                values=util.get_mini_table('ats'),
+                                size_hint_y=None,
+                                height=35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение каждой категории на каждую АТС',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
+
 
 
 if __name__ == '__main__':

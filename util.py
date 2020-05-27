@@ -374,3 +374,54 @@ def sixth_query(id_of_city, date):
             result.append(row[0])
 
     return result
+
+
+def seventh_query(price):
+    query = 'SELECT id ' \
+            'FROM call ' \
+            f'WHERE call.price > {price}'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def eight_query(id_of_ats):
+    query = 'SELECT c.title_of_city AS "Название города" , ' \
+            '       COUNT(call.id_of_city) AS "Количество звонков" ' \
+            'FROM call ' \
+            'INNER JOIN city c on `call`.id_of_city = c.id ' \
+            f'WHERE call.id_of_ats = {id_of_ats} ' \
+            'GROUP BY c.title_of_city '
+    cursor.execute(query)
+    title_of_rows = tuple(title[0] for title in cursor.description)
+    return title_of_rows, cursor.fetchall()
+
+
+def ninth_query(id_of_ats):
+    query = 'SELECT a.second_name || " " || a.first_name AS "ФИО", ' \
+            '       MAX(call.duration) AS "Длительность", ' \
+            '       call.date_of_call AS "Дата звонка", ' \
+            '       call.phone_of_opponent AS "Номер звонившему" ' \
+            'FROM call ' \
+            'INNER JOIN city c on `call`.id_of_city = c.id ' \
+            'INNER JOIN abonent a on `call`.id_of_abonent = a.id ' \
+            f'WHERE call.id_of_ats = {id_of_ats} ' \
+            'GROUP BY call.date_of_call '
+    cursor.execute(query)
+    title_of_rows = tuple(title[0] for title in cursor.description)
+    return title_of_rows, cursor.fetchall()
+
+
+def task1(id_of_ats):
+    query = 'SELECT s.title_of_social AS soc,' \
+            '       COUNT(s.title_of_social) AS amount ' \
+            'FROM call ' \
+            'INNER JOIN city c on `call`.id_of_city = c.id ' \
+            'INNER JOIN abonent a on `call`.id_of_abonent = a.id ' \
+            'INNER JOIN social s on a.id_of_social = s.id ' \
+            f'WHERE call.id_of_ats = {id_of_ats} ' \
+            'GROUP BY s.title_of_social '
+    query = 'SELECT q.soc AS "Социальный статус", ' \
+            '       MAX(q.amount) AS "Количество пользователей"' \
+            'FROM (' + query + ') as q'
+    cursor.execute(query)
+    title_of_rows = tuple(title[0] for title in cursor.description)
+    return title_of_rows, cursor.fetchall()
