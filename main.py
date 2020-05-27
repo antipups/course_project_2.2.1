@@ -1,4 +1,5 @@
 import functools
+import random
 
 from kivy.animation import Animation
 import ctypes
@@ -198,7 +199,8 @@ class MyApp(App):
         scroll.add_widget(table)
 
         def show_selected_value(spinner, text):
-
+            if text.startswith('Таблица'):
+                return
             table.clear_widgets()
             dict_of_data = util.read_tables(text)
             table.cols = len(dict_of_data)
@@ -209,9 +211,15 @@ class MyApp(App):
                                         size_hint_y=None,
                                         background_color=(0, 1, 0, 1)))
 
+            counter = 0
             for row in zip(*dict_of_data.values()):
+                counter += 1
+                if text == 'Город' and counter > 100:
+                    continue
                 for element in row:
                     table.add_widget(Button(text=str(element)))
+
+            spinner.text = 'Таблица - ' + text + '; Кол-во записей - ' + str(counter)
 
         spinner.bind(text=show_selected_value)
         # выбор чего-то
@@ -798,11 +806,98 @@ class MyApp(App):
         main_bl = BoxLayout(orientation='horizontal')
 
         spinner = Spinner(text='Выберите запрос или действие',
-                          values=[])
+                          values=['Вывести все Льготы по указанному типу'],
+                          size_hint=(None, None),
+                          size=(300, 50))
 
+        def selected_item(spinner, text):
+            """
+                Текст - это выбора запроса,
+                table - это правая панель
+            :param spinner:
+            :param text:
+            :return:
+            """
+            {'Вывести все Льготы по указанному типу\n'
+             '(Внутренне симметричный запрос по внешн. ключу)': self.first_query(table),
+             }.get(text)
+
+        # всё до конца функции это генерация рабочего пространства, правая панель это table
+        spinner.bind(text=selected_item)
+        temp_bl = BoxLayout(orientation='vertical',
+                            size_hint_x=None,
+                            width=300)
+        temp_bl.add_widget(spinner)
+        temp_bl.add_widget(Widget())
+        main_bl.add_widget(temp_bl)
+
+        table = GridLayout(row_default_height=50,
+                           row_force_default=True,
+                           size_hint_y=None)
+        table.bind(minimum_height=table.setter('height'))
+        scroll = ScrollView(size_hint=(1, None), size=(Window.width, Window.height))
+        scroll.add_widget(table)
+        main_bl.add_widget(scroll)
         screen.add_widget(main_bl)
+
         return screen
 
+    def first_query(self, gl):
+        """
+            Первый запрос внутренне симмистричный на получение Льгот через их типы
+        :param gl:
+        :return:
+        """
+        def get_data_from_db(instance):
+            """
+            Формируем результат после нажатия в Попапе Готово
+            :param instance:
+            :return:
+            """
+            type_ = str()
+            for widget in temp.children:
+                if widget.id == 'spinner' and widget.text.find('---') == -1:
+                    type_ = widget.text
+                    break
+            else:
+                instance.background_color = (1, 0, 0, 1)
+                return
+
+            exsists_elements = util.first_query(type_[:type_.find(' | ')])
+            dict_of_data = util.read_tables('Льгота')
+            gl.cols = len(dict_of_data)
+
+            for key in dict_of_data.keys():
+                gl.add_widget(Button(text=key,
+                                     height=50,
+                                     size_hint_y=None,
+                                     background_color=(0, 1, 0, 1)))
+
+            for row in zip(*dict_of_data.values()):
+                if row[0] in exsists_elements:
+                    for element in row:
+                        gl.add_widget(Button(text=str(element)))
+
+            popup.dismiss()
+
+        temp = BoxLayout(orientation='vertical')
+        temp.add_widget(Spinner(text='--- Выберите тип ---',
+                                values=util.get_mini_table('type_privilege'),
+                                size_hint_y = None,
+                                height = 35,
+                                id='spinner'))
+        temp.add_widget(Widget())
+
+        temp.add_widget(Button(text='Готово',
+                               size_hint_y=None,
+                               height=35,
+                               on_press=get_data_from_db))
+
+        popup = Popup(title='Получение льгот через их типы',
+                      size_hint=(None, None),
+                      size=(400, 400),
+                      content=temp)
+        popup.open()
 
 if __name__ == '__main__':
     MyApp().run()

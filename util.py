@@ -121,7 +121,8 @@ def read_tables(name_of_table_rus):
     elif name_of_table_rus == 'Город':
         cursor.execute(f'SELECT * '
                        f'FROM {name_of_table} '
-                       f'INNER JOIN country ON country.id = {name_of_table}.id_of_country')
+                       f'INNER JOIN country ON country.id = {name_of_table}.id_of_country '
+                       f'LIMIT 50')
         for row in cursor.fetchall():
             row = row[:2] + row[4:]
             for index, key in enumerate(dict_of_data.keys()):
@@ -262,7 +263,7 @@ def get_mini_table(table):
         table = 'type_privilege'
     elif table == 'privileges':
         table = 'privilege'
-    return (str(row[0]) + ' | ' + row[1] for row in cursor.execute(f'SELECT * FROM {table}').fetchall())
+    return (str(row[0]) + ' | ' + row[1] for row in cursor.execute(f'SELECT * FROM {table} LIMIT 50').fetchall())
 
 
 def get_fields_delete(table):
@@ -313,3 +314,24 @@ def update_rows(name_of_table, dict_of_old_data, dict_of_new_data):
     else:
         connect.commit()
         return (True, )
+
+
+#########################################################################################
+
+######################################## ЗАПРОСЫ ########################################
+
+#########################################################################################
+
+
+def first_query(id_of_type):
+    query = 'SELECT id ' \
+            'FROM privilege ' \
+            f'WHERE privilege.id_of_type = {id_of_type}'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
+
+
+def first_query(id_of_type):
+    query = 'SELECT id ' \
+            'FROM privilege ' \
+            f'WHERE privilege.id_of_type = {id_of_type}'
+    return tuple(row[0] for row in cursor.execute(query).fetchall())
